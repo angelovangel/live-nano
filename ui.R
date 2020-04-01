@@ -1,12 +1,20 @@
+
 dashboardPage(
-  dashboardHeader(title = "live-nano-type"),
-  dashboardSidebar(collapsed = TRUE,
+  dashboardHeader(title = "live-nano"), 
+  dashboardSidebar(collapsed = FALSE,
     # sliderInput("rateThreshold", "Warn when rate exceeds",
     #             min = 0, max = 50, value = 3, step = 0.1
     # ),
     sidebarMenu(
-      menuItem("Dashboard", tabName = "dashboard"),
-      menuItem("Raw data", tabName = "rawdata"), 
+      #menuItem("Dashboard", tabName = "dashboard"),
+      #menuItem("Raw data", tabName = "rawdata"), 
+      tags$hr(),
+      
+      shinyDirButton(id = "fastq_folder", label = "Choose ONT folder", title = "Select folder with fastq files"),
+      tags$hr(),
+      
+      actionButton("simulate", label = "Simulate real-time"),
+      tags$hr(),
       sliderInput("probfilter", "Filter by probability", min = 0, max = 1, step = 0.1, value = 0),
       shinyWidgets::sliderTextInput("abundfilter", 
                                     "Filter by abundance", 
@@ -18,8 +26,8 @@ dashboardPage(
     )
   ),
   dashboardBody(
-    tabItems(
-      tabItem("dashboard",
+    tabsetPanel(
+      tabPanel("dashboard",
               fluidRow(
                 #valueBoxOutput("rate"),
                 valueBoxOutput("treads", width = 7),
@@ -38,7 +46,7 @@ dashboardPage(
                 )
               )
       ),
-      tabItem("rawdata",
+      tabPanel("rawdata",
               numericInput("maxrows", "Rows to show", 25),
               tableOutput("rawtable"),
               downloadButton("downloadCsv", "Download as CSV")
