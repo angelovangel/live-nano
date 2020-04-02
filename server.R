@@ -5,7 +5,7 @@
   streamfile <- "stream.tsv"
   # generate a dataframe with zeros, to write on exit to stream.tsv
   columns <- c("time", "step", "reads", "bases", "species", "prob", "err", "tAligned", "sAligned")
-  emptystream <- setNames(data.frame(matrix(ncol = 9, nrow = 0, 0)), columns)
+  emptystream <- setNames(data.frame(matrix(ncol = 9, nrow = 1, 0)), columns)
   fileData <- reactiveFileReader(500, NULL, streamfile, fread)
   
 
@@ -14,7 +14,7 @@ function(input, output, session) {
   options(shiny.launch.browser = TRUE)
 
    session$onSessionEnded(function() {
-     #fwrite(emptystream, file = "stream.tsv")
+     fwrite(emptystream, file = "stream.tsv")
      #stopApp() # comment out on deploy
    })
   
@@ -22,10 +22,14 @@ function(input, output, session) {
  
   # OBSERVERS
   observeEvent(input$simulate, {
-    # shinyjs::disable("simulate")
+    shinyjs::disable("simulate")
     # system call here, so that I can use wait=F
-    system2("./simulateST.R", args = c("-f testdata/HMW_Zymo.tsv", "-o stream.tsv", "-s 1"), 
-            wait = FALSE)
+    p <- system2("./simulateST.R", 
+                 args = c("-f" ,"testdata/HMW_Zymo.tsv",
+                          "-o", "stream.tsv",
+                          "-s", "1"), 
+                 wait = FALSE)
+    
   })
   
   
