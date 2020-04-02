@@ -14,15 +14,16 @@ function(input, output, session) {
   options(shiny.launch.browser = TRUE)
 
    session$onSessionEnded(function() {
-     fwrite(emptystream, file = "stream.tsv")
-     stopApp() # comment out on deploy
+     #fwrite(emptystream, file = "stream.tsv")
+     #stopApp() # comment out on deploy
    })
   
   # fileData <- reactiveFileReader(500, session, streamfile, fread)
  
   # OBSERVERS
   observeEvent(input$simulate, {
-    # system call here, so that can use wait=F
+    # shinyjs::disable("simulate")
+    # system call here, so that I can use wait=F
     system2("./simulateST.R", args = c("-f testdata/HMW_Zymo.tsv", "-o stream.tsv", "-s 1"), 
             wait = FALSE)
   })
@@ -39,8 +40,8 @@ function(input, output, session) {
     #req(file.exists(streamfile), )
     
     fileData() %>% 
-      mutate(Abundance_t = sAligned/readsData$total, Abundance_m = sAligned/readsData$mapped) %>%
-      filter(prob > input$probfilter & Abundance_m > (input$abundfilter/100))
+      dplyr::mutate(Abundance_t = sAligned/readsData$total, Abundance_m = sAligned/readsData$mapped) %>%
+      dplyr::filter(prob > input$probfilter & Abundance_m > (input$abundfilter/100))
   })
   
   
@@ -81,11 +82,11 @@ function(input, output, session) {
       return()
     
     df <- filteredData() %>%
-      filter(step == max(step)) %>%
-      select(species, prob, sAligned, Abundance_m) %>%
-      mutate(Abundance_m = formattable::percent(Abundance_m)) %>%
-      arrange(desc(sAligned)) %>%
-      mutate(prob = round(prob, 2)) %>%
+      dplyr::filter(step == max(step)) %>%
+      dplyr::select(species, prob, sAligned, Abundance_m) %>%
+      dplyr::mutate(Abundance_m = formattable::percent(Abundance_m)) %>%
+      dplyr::arrange(desc(sAligned)) %>%
+      dplyr::mutate(prob = round(prob, 2)) %>%
       # just the top 20?
       head(20)
     
@@ -99,10 +100,10 @@ function(input, output, session) {
     if (nrow(filteredData()) == 0)
       return()
     df <- filteredData() %>%
-      filter(step == max(step)) %>%
-      arrange(desc(Abundance_m)) %>%
+      dplyr::filter(step == max(step)) %>%
+      dplyr::arrange(desc(Abundance_m)) %>%
       # assign colors according to prob
-      mutate(prob_color = scales::col_numeric("YlGn", domain = c(0,1))(prob)) %>%
+      dplyr::mutate(prob_color = scales::col_numeric("YlGn", domain = c(0,1))(prob)) %>%
      # just the top 20?
       head(20)
     

@@ -1,6 +1,7 @@
 # 
 library(shiny)
 library(shinyFiles)
+library(shinyjs)
 library(shinydashboard)
 library(dplyr)
 library(lubridate)

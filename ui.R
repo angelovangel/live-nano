@@ -6,6 +6,7 @@ dashboardPage(
     #             min = 0, max = 50, value = 3, step = 0.1
     # ),
     sidebarMenu(
+      shinyjs::useShinyjs(),
       #menuItem("Dashboard", tabName = "dashboard"),
       #menuItem("Raw data", tabName = "rawdata"), 
       tags$hr(),
