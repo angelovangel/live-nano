@@ -3,35 +3,40 @@
 # and the results are plotted as bubble and table
 
   streamfile <- "stream.tsv"
+  # generate a dataframe with zeros, to write on exit to stream.tsv
+  columns <- c("time", "step", "reads", "bases", "species", "prob", "err", "tAligned", "sAligned")
+  emptystream <- setNames(data.frame(matrix(ncol = 9, nrow = 0, 0)), columns)
   fileData <- reactiveFileReader(500, NULL, streamfile, fread)
+  
 
 function(input, output, session) {
   
+  options(shiny.launch.browser = TRUE)
+
+   session$onSessionEnded(function() {
+     fwrite(emptystream, file = "stream.tsv")
+     stopApp() # comment out on deploy
+   })
+  
+  # fileData <- reactiveFileReader(500, session, streamfile, fread)
+ 
   # OBSERVERS
   observeEvent(input$simulate, {
-    #simulateST("testdata/HMW_Zymo.tsv", outfile = "stream.tsv", interval = 1)
+    # system call here, so that can use wait=F
     system2("./simulateST.R", args = c("-f testdata/HMW_Zymo.tsv", "-o stream.tsv", "-s 1"), 
             wait = FALSE)
   })
   
-  options(shiny.launch.browser = TRUE)
-
-  # session$onSessionEnded(function() {
-  #   unlink("test.tsv")
-  # })
-  
-  #fileData <- reactiveFileReader(500, session, streamfile, fread)
- 
   
   # reactive vals for storing total and mapped reads
   readsData <- reactiveValues(mapped = 0, total = 0)
   
   filteredData <- reactive({
     
-    validate(need(
-      file.exists(streamfile), "error"
-    ))
-    
+    # validate(need(
+    #   file.exists(streamfile), "error"
+    # ))
+    #req(file.exists(streamfile), )
     
     fileData() %>% 
       mutate(Abundance_t = sAligned/readsData$total, Abundance_m = sAligned/readsData$mapped) %>%
@@ -48,8 +53,12 @@ function(input, output, session) {
     readsData$mapped <- fileData()[1,8] %>% as.numeric()
     
     valueBox(
-      value = readsData$mapped,
-      subtitle = "Mapped reads",
+      value = prettyNum(readsData$mapped, big.mark = ","),
+      subtitle = ifelse(
+        readsData$mapped == 0, # handle case at start, when the df is nulls only
+        "NA",
+        paste("Mapped reads:", scales::percent(readsData$mapped/readsData$total), "of total")
+        ),
       icon = icon("dna")
     )
   })
@@ -57,8 +66,12 @@ function(input, output, session) {
     readsData$total <- fileData()[1,3] %>% as.numeric()
     
     valueBox(
-      value = readsData$total,
-      subtitle = "Total reads",
+      value = prettyNum(readsData$total, big.mark = ","),
+      subtitle = HTML("<b>Total reads</b> | <b>Step:</b> ", 
+                       last(fileData()$step),
+                       " | <b>Timestamp:</b>",
+                       as.character(parse_date_time(last(fileData()$time), orders = "a b! d! HMS Y")) 
+                       ),
       icon = icon("dna")
     )
   })
